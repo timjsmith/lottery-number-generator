@@ -1,20 +1,21 @@
 import React, { useState } from 'react'
+import { saveToHistory } from '../utils/historyStorage'
 
 function Generator() {
   const [formData, setFormData] = useState({
     genString: '',
     lastWinningNumbers: '',
     regularPickTotal: 5,
-    regularPickMax: 70,
+    regularPickMax: 69,
     pbPickTotal: 1,
-    pbPickMax: 25,
+    pbPickMax: 26,
     additionalGenTotal: 0
   })
 
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [selectedPreset, setSelectedPreset] = useState(null)
+  const [selectedPreset, setSelectedPreset] = useState('powerball')
   const [isInfoExpanded, setIsInfoExpanded] = useState(false)
 
   const handleInputChange = (e) => {
@@ -63,6 +64,18 @@ function Generator() {
       const data = await response.json()
       console.log('Received data from server:', data)
       setResult(data)
+
+      // Save to history
+      saveToHistory({
+        method: 'generator',
+        preset: selectedPreset,
+        regularNumbers: data.winingNumbers,
+        powerballNumbers: data.winningPB || [],
+        stats: {
+          totalIterations: data.totalIterations,
+          timeElapsed: data.timeElapsedSeconds ? `${data.timeElapsedSeconds}s` : null
+        }
+      })
     } catch (err) {
       setError(err.message)
     } finally {

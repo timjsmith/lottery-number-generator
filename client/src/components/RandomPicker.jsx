@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react'
+import { saveToHistory } from '../utils/historyStorage'
 import './RandomPicker.css'
 
 function RandomPicker() {
   const [gameConfig, setGameConfig] = useState({
     regularPickTotal: 5,
-    regularPickMax: 70,
+    regularPickMax: 69,
     pbPickTotal: 1,
-    pbPickMax: 25
+    pbPickMax: 26
   })
 
-  const [selectedPreset, setSelectedPreset] = useState(null)
+  const [selectedPreset, setSelectedPreset] = useState('powerball')
   const [shuffledRegularNumbers, setShuffledRegularNumbers] = useState([])
   const [shuffledPBNumbers, setShuffledPBNumbers] = useState([])
   const [selectedRegularBoxes, setSelectedRegularBoxes] = useState([])
@@ -84,6 +85,14 @@ function RandomPicker() {
     setFinalPicks({
       regularNumbers: regularPicks,
       pbNumbers: pbPicks
+    })
+
+    // Save to history
+    saveToHistory({
+      method: 'randomPicker',
+      preset: selectedPreset,
+      regularNumbers: regularPicks,
+      powerballNumbers: pbPicks
     })
 
     // Scroll to top to show results

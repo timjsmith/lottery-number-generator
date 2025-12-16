@@ -1,0 +1,287 @@
+.ball-drop {
+  padding: 20px 0;
+}
+
+.ball-drop h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.game-controls {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+.start-btn,
+.reset-btn,
+.drop-btn {
+  padding: 15px 40px;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.start-btn,
+.reset-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.start-btn:hover,
+.reset-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.drop-btn {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.drop-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.drop-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  animation: none;
+  opacity: 0.6;
+}
+
+.drop-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.powerball-btn {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.powerball-btn:hover {
+  box-shadow: 0 6px 20px rgba(245, 87, 108, 0.4);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+  }
+}
+
+.game-status {
+  margin: 30px 0;
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.phase-info {
+  text-align: center;
+}
+
+.phase-info h3 {
+  color: #667eea;
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.phase-info p {
+  color: #555;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.current-picks {
+  text-align: center;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.current-picks strong {
+  display: block;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.picks-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pick-number {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+}
+
+.canvas-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+  min-height: 600px;
+}
+
+.canvas-container canvas {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.slot-labels {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-400px);
+  width: 800px;
+  display: flex;
+  justify-content: space-around;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.slot-label {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  border: 3px solid #667eea;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  color: #667eea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateX(-50%);
+}
+
+.final-picks {
+  margin-bottom: 30px;
+  padding: 30px;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 12px;
+  text-align: center;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.final-picks h2 {
+  color: #333;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+}
+
+.numbers {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.main-numbers,
+.pb-numbers {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+}
+
+.number {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 50%;
+  font-size: 24px;
+  font-weight: bold;
+  color: #667eea;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.number.powerball {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.number.empty {
+  background: #f5f5f5;
+  color: #ccc;
+  border: 3px dashed #ccc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.number.powerball.empty {
+  background: #f5f5f5;
+  color: #ccc;
+  border: 3px dashed #ccc;
+}
+
+.pb-numbers .label {
+  font-weight: 600;
+  color: #555;
+  margin-right: 10px;
+}
+
+@media (max-width: 900px) {
+  .canvas-container {
+    overflow-x: auto;
+  }
+
+  .canvas-container canvas {
+    min-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .drop-btn,
+  .start-btn,
+  .reset-btn {
+    padding: 12px 30px;
+    font-size: 16px;
+  }
+
+  .phase-info h3 {
+    font-size: 1.3rem;
+  }
+
+  .slot-label {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+  }
+
+  .number {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+}
