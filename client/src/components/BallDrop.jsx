@@ -89,8 +89,8 @@ function BallDrop() {
     if (!canvasRef.current) return
 
     const width = 800
-    const height = 600
-    const numSlots = 10
+    const height = 700
+    const numSlots = 20
     const wallThickness = 20
     const usableWidth = width - (wallThickness * 2)
     const slotWidth = usableWidth / numSlots
@@ -138,9 +138,18 @@ function BallDrop() {
 
     // Create pegs (obstacles) - staggered pattern
     const pegs = []
-    const pegRows = 11
-    const pegCols = 9
-    const pegSpacing = width / (pegCols + 1)
+    const pegRadius = 5 // Smaller pegs for less cramped board
+    const ballDiameter = 30 // Ball radius is 15, so diameter is 30
+    const pegGap = ballDiameter + 2 // Gap should be 2 pixels wider than ball
+    const pegSpacing = (pegRadius * 2) + pegGap // Distance between peg centers
+    const pegRowSpacing = pegSpacing // Same spacing vertically
+    const pegCols = Math.floor((width - wallThickness * 2) / pegSpacing)
+
+    // Calculate number of rows that fit with proper gap before slots
+    const pegStartY = 80
+    const slotAreaY = height - 100 // Leave 100px for slot area
+    const availableVerticalSpace = slotAreaY - pegStartY
+    const pegRows = Math.floor(availableVerticalSpace / pegRowSpacing)
 
     for (let row = 0; row < pegRows; row++) {
       const isEvenRow = row % 2 === 0
@@ -149,11 +158,37 @@ function BallDrop() {
 
       for (let col = 0; col < colsInRow; col++) {
         const x = xOffset + pegSpacing * (col + 1)
-        const y = 60 + row * 38
-        pegs.push(Bodies.circle(x, y, 8, {
+        const y = pegStartY + row * pegRowSpacing
+        pegs.push(Bodies.circle(x, y, pegRadius, {
           isStatic: true,
           render: { fillStyle: '#764ba2' },
           restitution: 0.9,
+          friction: 0.001
+        }))
+      }
+    }
+
+    // Add vertical lines of pegs near the walls (on even rows to complement odd rows)
+    // These pegs are larger and positioned so half extends into the wall
+    // Start from second row down and use wall color
+    // Radius is 1/3 of slot width
+    const edgePegRadius = slotWidth / 3
+    for (let row = 1; row < pegRows; row++) {
+      const isEvenRow = row % 2 === 0
+      if (isEvenRow) {
+        const y = pegStartY + row * pegRowSpacing
+        // Left edge peg (positioned at inner wall edge so half is in wall)
+        pegs.push(Bodies.circle(wallThickness, y, edgePegRadius, {
+          isStatic: true,
+          render: { fillStyle: '#667eea' },
+          restitution: 1.5, // Super bounce
+          friction: 0.001
+        }))
+        // Right edge peg (positioned at inner wall edge so half is in wall)
+        pegs.push(Bodies.circle(width - wallThickness, y, edgePegRadius, {
+          isStatic: true,
+          render: { fillStyle: '#667eea' },
+          restitution: 1.5, // Super bounce
           friction: 0.001
         }))
       }
@@ -163,7 +198,7 @@ function BallDrop() {
     const dividers = []
     for (let i = 1; i < numSlots; i++) {
       const x = wallThickness + (i * slotWidth)
-      dividers.push(Bodies.rectangle(x, height - 60, 4, 100, {
+      dividers.push(Bodies.rectangle(x, height - 40, 4, 80, {
         isStatic: true,
         render: { fillStyle: '#667eea' }
       }))
@@ -206,41 +241,64 @@ function BallDrop() {
           const isRegularPhase = gamePhaseRef.current === 'regular'
           const slotNumber = isRegularPhase ? slotNumbersRef.current[slotIndex] : pbSlotNumbersRef.current[slotIndex]
 
-          setTimeout(() => {
-            if (isRegularPhase) {
+          // Re-enable dropping immediately when ball lands
+          if (isRegularPhase) {
+            setRegularPicks(prev => {
+              const newPicks = [...prev, slotNumber]
+              // Only re-enable clicking if this isn't the last ball
+              if (newPicks.length < gameConfig.regularPickTotal) {
+                setIsBallDropping(false)
+              }
+              return newPicks
+            })
+
+            // Re-randomize slot numbers after a brief delay
+            setTimeout(() => {
               setRegularPicks(prev => {
-                const newPicks = [...prev, slotNumber]
-                // Only re-enable button if this isn't the last ball
-                if (newPicks.length < gameConfig.regularPickTotal) {
-                  setIsBallDropping(false)
-                  // Re-randomize slot numbers after each pick, excluding already picked numbers
+                if (prev.length < gameConfig.regularPickTotal) {
                   const allNumbers = Array.from({ length: gameConfig.regularPickMax }, (_, i) => i + 1)
-                  const availableNumbers = allNumbers.filter(num => !newPicks.includes(num))
+                  const availableNumbers = allNumbers.filter(num => !prev.includes(num))
                   const shuffled = shuffleArray(availableNumbers)
-                  setSlotNumbers(shuffled.slice(0, 10))
-                  slotNumbersRef.current = shuffled.slice(0, 10)
+                  setSlotNumbers(shuffled.slice(0, 20))
+                  slotNumbersRef.current = shuffled.slice(0, 20)
                 }
-                // If this is the last ball, keep button disabled until powerball phase
-                return newPicks
+                return prev
               })
-            } else {
-              setPbPick(slotNumber)
-              setTimeout(() => setGamePhase('complete'), 500)
-            }
-          }, 500)
+            }, 500)
+          } else {
+            setIsBallDropping(false)
+            setPbPick(slotNumber)
+            setTimeout(() => setGamePhase('complete'), 500)
+          }
         }
       })
     })
   }
 
-  const dropBall = () => {
+  const handleCanvasClick = (e) => {
+    if (!engineRef.current || isBallDropping) return
+    if (gamePhase !== 'regular' && gamePhase !== 'powerball') return
+    if (gamePhase === 'regular' && regularPicks.length >= gameConfig.regularPickTotal) return
+    if (gamePhase === 'powerball' && pbPick) return
+
+    // Get the actual canvas element, not the container div
+    const canvas = renderRef.current?.canvas
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+
+    dropBall(clickX)
+  }
+
+  const dropBall = (dropX) => {
     if (!engineRef.current) return
 
     setIsBallDropping(true)
 
     const width = 800
     const ballRadius = 15
-    const x = width / 2 + (Math.random() - 0.5) * 100
+    const x = dropX !== undefined ? dropX : width / 2
 
     const ball = Matter.Bodies.circle(x, 50, ballRadius, {
       label: 'ball',
@@ -250,6 +308,12 @@ function BallDrop() {
         fillStyle: gamePhase === 'regular' ? '#667eea' : '#f5576c'
       },
       hasLanded: false
+    })
+
+    // Add initial random horizontal velocity to prevent straight vertical drops
+    Matter.Body.setVelocity(ball, {
+      x: (Math.random() - 0.5) * 3,
+      y: 0
     })
 
     ballsRef.current.push(ball)
@@ -262,7 +326,7 @@ function BallDrop() {
     // Generate random slot numbers for regular picks
     const allNumbers = Array.from({ length: gameConfig.regularPickMax }, (_, i) => i + 1)
     const shuffled = shuffleArray(allNumbers)
-    const slots = shuffled.slice(0, 10)
+    const slots = shuffled.slice(0, 20)
     setSlotNumbers(slots)
     slotNumbersRef.current = slots
 
@@ -281,11 +345,11 @@ function BallDrop() {
       renderRef.current = null
     }
 
-    // Generate 10 random powerball numbers
-    const pbMin = Math.max(1, gameConfig.pbPickMax - 9)
+    // Generate 20 random powerball numbers
+    const pbMin = Math.max(1, gameConfig.pbPickMax - 19)
     const pbMax = gameConfig.pbPickMax
     const pbNumbers = []
-    while (pbNumbers.length < Math.min(10, gameConfig.pbPickMax)) {
+    while (pbNumbers.length < Math.min(20, gameConfig.pbPickMax)) {
       const num = Math.floor(Math.random() * (pbMax - pbMin + 1)) + pbMin
       if (!pbNumbers.includes(num)) {
         pbNumbers.push(num)
@@ -349,7 +413,7 @@ function BallDrop() {
       <h1>Ball Drop Game</h1>
 
       <div className="info-box">
-        <p>Drop balls and watch them bounce through pegs into numbered slots! Each slot contains a random number from the lottery range.</p>
+        <p>Click anywhere on the board to drop a ball at that position. Watch it bounce through pegs into numbered slots! Each slot contains a random number from the lottery range.</p>
       </div>
 
       {(gamePhase === 'regular' || gamePhase === 'powerball' || gamePhase === 'complete') && (
@@ -441,25 +505,25 @@ function BallDrop() {
           </div>
 
           {gamePhase === 'regular' && regularPicks.length < gameConfig.regularPickTotal && (
-            <button onClick={dropBall} className="drop-btn" disabled={isBallDropping}>
-              Drop Ball
-            </button>
+            <div className="drop-status">
+              {isBallDropping ? 'Wait for results...' : 'Click on board to drop the ball'}
+            </div>
           )}
 
           {gamePhase === 'powerball' && !pbPick && (
-            <button onClick={dropBall} className="drop-btn powerball-btn" disabled={isBallDropping}>
-              Drop Powerball
-            </button>
+            <div className="drop-status powerball-status">
+              {isBallDropping ? 'Wait for results...' : 'Click on board to drop the powerball'}
+            </div>
           )}
         </div>
       )}
 
-      <div className="canvas-container" ref={canvasRef}>
+      <div className="canvas-container" ref={canvasRef} onClick={handleCanvasClick}>
         {(gamePhase === 'regular' || gamePhase === 'powerball') && (
           <div className="slot-labels">
             {(gamePhase === 'regular' ? slotNumbers : pbSlotNumbers).map((num, idx) => {
               const width = 800
-              const numSlots = 10
+              const numSlots = 20
               const wallThickness = 20
               const usableWidth = width - (wallThickness * 2)
               const slotWidth = usableWidth / numSlots
